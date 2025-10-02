@@ -1,0 +1,7 @@
+Group Partition Suggestion (for 4 students)
+
+Member A - Prolog KB: prolog/medical_kb.pl
+Member B - pyswip integration: pyswip_client/query_prolog.py
+Member C - Rule engine + GUI: rule_engine_gui/rule_engine_gui.py
+Member D - Documentation, screenshots, packaging: README.md, USAGE.txt, screenshots/
+
