@@ -25,8 +25,8 @@ README.md
    - Run SWI-Prolog and consult the file:
        ?- [medical_kb].
      Example queries:
-       ?- symptoms(patient1, [fever, facial_pain, nasal_discharge, recent_onset]).
-       ?- diagnose(patient1, Dx).
+       ?- diagnose([nasal_congestion, thick_discharge, facial_pain], C).
+
      The expected diagnoses are:
        acute_sinusitis, chronic_sinusitis, rhinitis, deviated_nasal_septum
      See prolog/medical_kb.pl for full examples.
@@ -35,20 +35,16 @@ README.md
    - Install pyswip: pip install pyswip
    - Ensure SWI-Prolog is installed and available in PATH.
    - Run:
-       python3 query_prolog.py
+       python3 pyswip_client/query_prolog.py
+
      This script demonstrates asserting symptoms and querying diagnoses via pyswip.
 
 3. Rule-based engine with GUI (no extra libraries)
    - Run:
-       python3 rule_engine_gui.py
-     A simple Tkinter GUI will open where you can check symptoms and press INFER to get diagnoses.
+       streamlit run rule_engine_gui/rule_engine_gui.py
+     A simple web app  will open where you can check symptoms and press INFER to get diagnoses.
 
---- Notes for group of 4 ---
-This project is intentionally packaged for 4 students. Split responsibilities:
-  - Member A: Prolog knowledge base and testing queries
-  - Member B: Python pyswip integration
-  - Member C: Rule engine & GUI
-  - Member D: Report, screenshots, and packaging
+--- Notes for group of 2 ---
+No group approached us to join their team, so we proceeded as a group of two.
 
-If your group size differs, you can still use the same partitioning; let me know if you need a different layout.
-
+  

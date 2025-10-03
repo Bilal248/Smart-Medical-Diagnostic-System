@@ -1,11 +1,11 @@
 Sample queries & commands
 
 SWI-Prolog (interactive):
-?- [medical_kb].
-?- diagnose([recent_onset, fever, facial_pain, purulent_nasal_discharge], Dx).
-
+swipl  prolog/medical_kb.pl
+diagnose([nasal_congestion, thick_discharge, facial_pain], C).
+ 
 Python (pyswip):
 python3 pyswip_client/query_prolog.py
 
 Rule GUI:
-python3 rule_engine_gui/rule_engine_gui.py
+streamlit run rule_engine_gui/rule_engine_gui.py
