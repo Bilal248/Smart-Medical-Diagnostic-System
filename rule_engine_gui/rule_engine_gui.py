@@ -1,95 +1,152 @@
-# rule_engine_gui.py
-# Simple rule-based engine with a Tkinter GUI for symptom input and forward-chaining inference.
-# No external libraries required.
-# Run: python3 rule_engine_gui.py
+import streamlit as st
+from PIL import Image
+import os
+import time
 
-import tkinter as tk
-from tkinter import ttk, messagebox
+st.markdown("""
+    <style>
+    .centered-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# Define rules as functions; each rule returns diagnosis if matched.
-def rule_acute(symptoms):
-    needed = {'recent_onset','fever','facial_pain','purulent_nasal_discharge'}
-    if needed.issubset(symptoms):
-        return 'acute_sinusitis'
-    # alternate rule
-    if {'recent_infection','facial_pain','purulent_nasal_discharge'}.issubset(symptoms):
-        return 'acute_sinusitis'
+symptoms = {
+  'fever': 'images/fever.png',
+    'facial_pain': 'images/facial_pain.png',
+    'purulent_nasal_discharge': 'images/purulent_nasal_discharge.png',
+    'recent_infection': 'images/recent_infection.png',
+    'symptoms_more_than_12_weeks': 'images/symptoms_more_than_12_weeks.png',
+    'nasal_obstruction': 'images/nasal_obstruction.png',
+    'facial_pressure': 'images/facial_pressure.png',
+    'sneezing': 'images/sneezing.png',
+    'nasal_itching': 'images/nasal_itching.png',
+    'watery_rhinorrhea': 'images/watery_rhinorrhea.png',
+    'allergen_exposure': 'images/allergen_exposure.png',
+    'nasal_congestion': 'images/nasal_congestion.png',
+    'visible_deviation': 'images/visible_deviation.png',
+    'chronic_nasal_obstruction': 'images/chronic_nasal_obstruction.png',
+    'history_of_trauma': 'images/history_of_trauma.png',
+    'unilateral_nasal_obstruction': 'images/unilateral_nasal_obstruction.png'
+}
+
+friendly_labels = {
+    key: key.replace("_", " ").title()
+    for key in symptoms
+}
+
+def rule_acute_sinusitis(sym):
+    if {'recent_onset', 'fever', 'facial_pain', 'purulent_nasal_discharge'}.issubset(sym):
+        return "Acute Sinusitis"
+    if {'recent_infection', 'facial_pain', 'purulent_nasal_discharge'}.issubset(sym):
+        return "Acute Sinusitis"
     return None
 
-def rule_chronic(symptoms):
-    needed = {'symptoms_more_than_12_weeks','nasal_obstruction','facial_pressure'}
-    if needed.issubset(symptoms):
-        return 'chronic_sinusitis'
+def rule_chronic_sinusitis(sym):
+    if {'symptoms_more_than_12_weeks', 'nasal_obstruction', 'facial_pressure'}.issubset(sym):
+        return "Chronic Sinusitis"
     return None
 
-def rule_rhinitis_allergic(symptoms):
-    needed = {'sneezing','nasal_itching','watery_rhinorrhea','allergen_exposure'}
-    if needed.issubset(symptoms):
-        return 'rhinitis_allergic'
+def rule_rhinitis_allergic(sym):
+    if {'sneezing', 'nasal_itching', 'watery_rhinorrhea', 'allergen_exposure'}.issubset(sym):
+        return "Allergic Rhinitis"
     return None
 
-def rule_rhinitis_non_allergic(symptoms):
-    needed = {'watery_rhinorrhea','nasal_congestion'}
-    if needed.issubset(symptoms) and 'allergen_exposure' not in symptoms:
-        return 'rhinitis_non_allergic'
+def rule_rhinitis_non_allergic(sym):
+    if {'watery_rhinorrhea', 'nasal_congestion'}.issubset(sym) and 'allergen_exposure' not in sym:
+        return "Non-Allergic Rhinitis"
     return None
 
-def rule_deviated(symptoms):
-    if {'visible_deviation','chronic_nasal_obstruction'}.issubset(symptoms) or {'history_of_trauma','unilateral_nasal_obstruction'}.issubset(symptoms):
-        return 'deviated_nasal_septum'
+def rule_deviated_septum(sym):
+    if {'visible_deviation', 'chronic_nasal_obstruction'}.issubset(sym) or \
+       {'history_of_trauma', 'unilateral_nasal_obstruction'}.issubset(sym):
+        return "Deviated Nasal Septum"
     return None
 
-RULES = [rule_acute, rule_chronic, rule_rhinitis_allergic, rule_rhinitis_non_allergic, rule_deviated]
-
-SYMPTOMS = [
-    'recent_onset','recent_infection','fever','facial_pain','purulent_nasal_discharge',
-    'symptoms_more_than_12_weeks','nasal_obstruction','facial_pressure','sneezing',
-    'nasal_itching','watery_rhinorrhea','allergen_exposure','nasal_congestion',
-    'visible_deviation','chronic_nasal_obstruction','history_of_trauma','unilateral_nasal_obstruction'
+RULES = [
+    rule_acute_sinusitis,
+    rule_chronic_sinusitis,
+    rule_rhinitis_allergic,
+    rule_rhinitis_non_allergic,
+    rule_deviated_septum
 ]
 
-class App:
-    def __init__(self, root):
-        self.root = root
-        root.title("Medical Rule Engine - ENT (Demo)")
+st.set_page_config(page_title="🩺 ENT Symptom Diagnosis", layout="centered")
 
-        self.vars = {}
-        row = 0
-        ttk.Label(root, text="Select symptoms present:").grid(row=row, column=0, sticky='w', padx=10, pady=5)
-        row += 1
-        for i, s in enumerate(SYMPTOMS):
-            var = tk.BooleanVar()
-            chk = ttk.Checkbutton(root, text=s, variable=var)
-            chk.grid(row=row + i//2, column=i%2, sticky='w', padx=10)
-            self.vars[s] = var
-        bottom_row = row + len(SYMPTOMS)//2 + 2
-        ttk.Button(root, text="Infer Diagnosis", command=self.infer).grid(row=bottom_row, column=0, padx=10, pady=10)
-        ttk.Button(root, text="Clear", command=self.clear).grid(row=bottom_row, column=1, padx=10, pady=10)
-        self.output = tk.Text(root, height=8, width=60)
-        self.output.grid(row=bottom_row+1, column=0, columnspan=2, padx=10, pady=5)
+st.markdown("<h1 style='text-align: center;'>🩺 ENT Symptom Diagnosis</h1>", unsafe_allow_html=True)
 
-    def infer(self):
-        symptoms = {s for s,v in self.vars.items() if v.get()}
+if "index" not in st.session_state:
+    st.session_state.index = 0
+if "selected_symptoms" not in st.session_state:
+    st.session_state.selected_symptoms = set()
+if "finished" not in st.session_state:
+    st.session_state.finished = False
+    def show_image_with_transition(img_path, caption):
+        img = Image.open(img_path).resize((300, 300))
+        img_placeholder = st.empty()
+        for opacity in range(0, 11):
+            img_placeholder.image(img, caption=caption)
+            time.sleep(0.03)
+        return img_placeholder
+
+symptom_keys = list(symptoms.keys())
+
+def restart():
+    st.session_state.index = 0
+    st.session_state.selected_symptoms = set()
+    st.session_state.finished = False
+
+if not st.session_state.finished:
+    idx = st.session_state.index
+    if idx < len(symptom_keys):
+        key = symptom_keys[idx]
+        label_text = friendly_labels[key]
+        img_path = os.path.join(os.path.dirname(__file__), symptoms[key])
+        col_img, col_spacer, col_img2 = st.columns([1, 2, 1])
+        with col_spacer:
+            if os.path.exists(img_path):
+                img = Image.open(img_path).resize((300, 300))
+                st.image(img, caption=label_text)
+            else:
+                st.warning(f"Image not found: {img_path}")
+            st.markdown(f"<h3 style='text-align: center;'>{label_text}</h3>", unsafe_allow_html=True)
+            col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
+            with col_btn2:
+                if st.button("✅ Yes", key=f"yes_{idx}"):
+                    st.session_state.selected_symptoms.add(key)
+                    st.session_state.index += 1
+                    st.rerun()
+                if st.button("❌ No", key=f"no_{idx}"):
+                    st.session_state.index += 1
+                    st.rerun()
+    else:
+        st.session_state.finished = True
+        st.rerun()
+else:
+    st.markdown("<h2 style='text-align: center;'>✔️ Review Complete</h2>", unsafe_allow_html=True)
+    st.button("🔁 Restart", on_click=restart)
+    selected = st.session_state.selected_symptoms
+    if not selected:
+        st.success("😊 You don’t seem to show any signs of these ENT conditions. Stay healthy!")
+    else:
+        st.markdown("### 🩺 Symptoms You Selected:")
+        for s in selected:
+            st.write(f"- {friendly_labels[s]}")
         diagnoses = []
-        # forward chaining: evaluate rules in order, append diagnoses if found
-        for r in RULES:
-            d = r(symptoms)
+        for rule in RULES:
+            d = rule(selected)
             if d and d not in diagnoses:
                 diagnoses.append(d)
-        if not diagnoses:
-            diagnoses = ['unknown']
-        self.output.delete('1.0', tk.END)
-        self.output.insert(tk.END, "Symptoms selected: {}\n\n".format(", ".join(symptoms) if symptoms else "none"))
-        self.output.insert(tk.END, "Diagnoses inferred:\n")
-        for d in diagnoses:
-            self.output.insert(tk.END, " - {}\n".format(d))
-
-    def clear(self):
-        for v in self.vars.values():
-            v.set(False)
-        self.output.delete('1.0', tk.END)
-
-if __name__ == '__main__':
-    root = tk.Tk()
-    app = App(root)
-    root.mainloop()
+        if diagnoses:
+            st.markdown("### 🔍 Possible Diagnosis:")
+            for d in diagnoses:
+                st.write(f"- {d}")
+        else:
+            st.info("❓ No specific ENT condition matched your symptoms.")

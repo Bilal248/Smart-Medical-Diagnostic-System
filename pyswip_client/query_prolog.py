@@ -1,31 +1,36 @@
-# query_prolog.py
-# Example usage of pyswip to consult the Prolog KB and query diagnoses.
-# Note: Requires SWI-Prolog installed and pyswip Python package.
-# Install: pip install pyswip
-# Run: python3 query_prolog.py
+from pyswip import Prolog
 
-from pyswip import Prolog, Functor, Variable, Query
+def get_all_symptoms(prolog):
+    symptoms = set()
+    for result in prolog.query("symptom(_, L)"):
+        symptoms.update(result['L'])
+    return list(symptoms)
 
-def run_example():
+def ask_symptoms(possible_symptoms):
+    patient_symptoms = []
+    for symptom in possible_symptoms:
+        ans = input(f"Do you have {symptom.replace('_', ' ')}? (y/n): ").strip().lower()
+        if ans == 'y':
+            patient_symptoms.append(symptom)
+    return patient_symptoms
+
+def main():
     prolog = Prolog()
-    # adjust path if needed
     prolog.consult("prolog/medical_kb.pl")
-    print("Consulted medical_kb.pl")
 
-    # Example: assert symptoms for a patient and query diagnoses
-    patient_symptoms = ['recent_onset','fever','facial_pain','purulent_nasal_discharge']
-    # Convert Python list to Prolog list representation as atoms
+    possible_symptoms = get_all_symptoms(prolog)
+    patient_symptoms = ask_symptoms(possible_symptoms)
+    if not patient_symptoms:
+        print("No symptoms entered. Cannot diagnose.")
+        return
+
     prolog_sym = "[" + ",".join(patient_symptoms) + "]"
-    # Query diagnose(Symptoms, Dx).
-    query = f"diagnose({prolog_sym}, Dx)"
-    print("Running query:", query)
+    query = f"diagnose({prolog_sym}, Condition)"
     results = list(prolog.query(query))
     if results:
-        print("Diagnoses found:")
-        for r in results:
-            print(" -", r['Dx'])
+        print(results[0]['Condition'])
     else:
-        print("No diagnosis returned by KB.")
+        print("No diagnosis found.")
 
 if __name__ == '__main__':
-    run_example()
+    main()
